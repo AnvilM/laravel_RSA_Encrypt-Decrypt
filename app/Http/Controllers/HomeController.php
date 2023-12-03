@@ -28,21 +28,19 @@ class HomeController extends Controller
         $key_len = $request->post('key_len');
         $src = $request->post('src');
 
+        //Валидация длинны ключа.
+        if ($key_len != 512 && $key_len != 1024 && $key_len != 2048 && $key_len != 4096)
+        {
+            return response('Invalid key_len', 422);
+        }
+
+        if ($func != 'encrypt' && $func != 'decrypt')
+        {
+            return response('Invalid method', 422);
+        }
+
         //Выполнение выбранного метода.
-        if ($func == 'encrypt')
-        {
-            $res = $this->RSAEncrypt($src, $key_len);
-            return response($res, 200);
-        }
-
-        else if ($func == 'decrypt')
-        {
-            $res = $this->RSADecrypt($src, $key_len);
-            return response($res, 200);
-        }
-
-        //Если метода нет, возвращаем ошибку.
-        return response('Invalid method', 422);
+        return response($this->$func($src, $key_len));
     }
 
 
@@ -53,7 +51,7 @@ class HomeController extends Controller
      * @param  int $key_len Длина ключа
      * @return string
      */
-    public function RSAEncrypt(string $src, int $key_len): string
+    public function encrypt(string $src, int $key_len): string
     {
         //Генерация пары клчюей.
         $RSA = RSA::createKey($key_len);
@@ -76,7 +74,7 @@ class HomeController extends Controller
      * @param  string $src Зашифрованное сообщение.
      * @return string
      */
-    public function RSADecrypt(string $src): string
+    public function decrypt(string $src): string
     {
         //Дешифрование сообщения из base64.
         $src = base64_decode($src);
